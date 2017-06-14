@@ -22,3 +22,11 @@ Two different methods are supported to store the secrets in Vault:
     - You must configure the Github oAuth2 credentials
     - You must configure the Vault parameters
     - You should configure a `session-secret` having at least 64 byte length (If you don't set this it's chosen randomly which will invalidate your session cookies on every restart of the application)
+
+## Security vs. Convenience
+
+One of the key questions I found myself asking while developing this was whether to transmit the secrets used to generate the one-time passwords to the browser and to do the code generation in the browser or to keep the secrets in the backend application and only to deliver the codes themselves.
+
+On the one hand the first solution would work when being offline because it can be cached in the browser. But seriously: I've never seen a OTP query when not being online so this wasn't a valid reason. On the other hand transmitting the secrets into the browser IMHO would be a major security flaw as - given the case you loose control over your browser having all those secrets stored in the local storage - an attacker would have the chance to generate unlimited one-time passwords for your accounts.
+
+In the end I went with the solution to transmit only names and the currently valid code. This means being offline you are not able to generate a new code but also this means you can revoke access to the Vault keys and immediately stop the attackers ability to generate codes on your behalf.
