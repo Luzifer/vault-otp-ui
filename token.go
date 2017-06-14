@@ -14,9 +14,10 @@ import (
 )
 
 type token struct {
+	Code   string `json:"code"`
+	Icon   string `json:"icon"`
 	Name   string `json:"name"`
 	Secret string `json:"-"`
-	Code   string `json:"code"`
 }
 
 func (t *token) GenerateCode(in time.Time) error {
@@ -142,21 +143,35 @@ func fetchTokenFromKey(client *api.Client, k string, respChan chan *token, wg *s
 		return
 	}
 
-	tok := &token{}
-
-	if data.Data[cfg.Vault.SecretField] != nil {
-		tok.Secret = data.Data[cfg.Vault.SecretField].(string)
-		tok.GenerateCode(time.Now())
-	} else if data.Data["code"] != nil {
-		tok.Code = data.Data["code"].(string)
-	} else {
-		// Secret did not have our field or a code, looks bad
+	if data.Data == nil {
+		// Key without any data? Weird.
 		return
 	}
 
-	tok.Name = k
-	if data.Data["name"] != nil {
-		tok.Name = data.Data["name"].(string)
+	tok := &token{
+		Icon: "key",
+		Name: k,
+	}
+
+	for k, v := range data.Data {
+		switch k {
+		case cfg.Vault.SecretField:
+			tok.Secret = v.(string)
+			tok.GenerateCode(time.Now())
+		case "code":
+			tok.Code = v.(string)
+		case "name":
+			tok.Name = v.(string)
+		case "account_name":
+			tok.Name = v.(string)
+		case "icon":
+			tok.Icon = v.(string)
+		}
+	}
+
+	if tok.Code == "" {
+		// Nothing ended in us having a code, does not seem to be something for us
+		return
 	}
 
 	respChan <- tok

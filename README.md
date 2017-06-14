@@ -8,6 +8,8 @@ Two different methods are supported to store the secrets in Vault:
 
 - Vault 0.7.x included [TOTP backend](https://www.vaultproject.io/docs/secrets/totp/index.html)
 - Custom (generic) secrets containing `secret`, `name`, and `icon` keys
+    - Icons supported are to be chosen from [FontAwesome](http://fontawesome.io/) icon set
+    - When no `name` is set the Vault key will be used as a name
 
 (When using the Vault builtin TOTP backend switching the icons for the tokens is not supported.)
 

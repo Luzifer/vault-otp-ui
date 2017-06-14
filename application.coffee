@@ -11,6 +11,7 @@ createOTPItem = (item) ->
   otpItem = $(tpl)
   otpItem.find('.badge').text item.code.replace(/^(.{3})(.{3})$/, '$1 $2')
   otpItem.find('.title').text item.name
+  otpItem.find('i.fa').addClass "fa-#{item.icon}"
 
   otpItem.appendTo $('#keylist')
 
