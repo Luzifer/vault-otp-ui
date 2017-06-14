@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/vault/api"
-	"github.com/hashicorp/vault/builtin/credential/github"
 	"github.com/pquerna/otp/totp"
 	"github.com/prometheus/common/log"
 )
@@ -59,13 +58,11 @@ func getSecretsFromVault(accessToken string) ([]*token, error) {
 		return nil, fmt.Errorf("Unable to create client: %s", err)
 	}
 
-	handler := &github.CLIHandler{}
-	t, err := handler.Auth(client, map[string]string{"token": accessToken})
-	if err != nil {
-		return nil, err
+	if s, err := client.Logical().Write("auth/github/login", map[string]interface{}{"token": accessToken}); err != nil || s.Auth == nil {
+		return nil, fmt.Errorf("Login did not work: Error = %s", err)
+	} else {
+		client.SetToken(s.Auth.ClientToken)
 	}
-
-	client.SetToken(t)
 
 	key := cfg.Vault.Prefix
 
