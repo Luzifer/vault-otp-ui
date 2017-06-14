@@ -1,0 +1,29 @@
+{
+  "display": "standalone",
+  "icons": [
+    {
+      "sizes": "128x128",
+      "src": "padlock_128.png",
+      "type": "image/png"
+    },
+    {
+      "sizes": "144x144",
+      "src": "padlock_144.png",
+      "type": "image/png"
+    },
+    {
+      "sizes": "152x152",
+      "src": "padlock_152.png",
+      "type": "image/png"
+    },
+    {
+      "sizes": "192x192",
+      "src": "padlock_192.png",
+      "type": "image/png"
+    }
+  ],
+  "name": "Vault OTP-UI",
+  "orientation": "portrait",
+  "short_name": "Vault OTP-UI",
+  "start_url": "/"
+}

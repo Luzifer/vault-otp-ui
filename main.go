@@ -1,6 +1,6 @@
 package main
 
-//go:generate go-bindata -pkg $GOPACKAGE -o assets.go index.html application.js
+//go:generate go-bindata -pkg $GOPACKAGE -o assets.go index.html application.js static
 
 import (
 	"bytes"
@@ -9,13 +9,16 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"mime"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/Luzifer/rconfig"
 	log "github.com/Sirupsen/logrus"
 	"github.com/alecthomas/template"
+	"github.com/gorilla/mux"
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 	"github.com/tdewolff/minify"
@@ -89,11 +92,13 @@ func main() {
 		log.Fatalf("Unable to parse CLI parameters: %s", err)
 	}
 
-	http.HandleFunc("/oauth2", handleOAuthCallback)
-	http.HandleFunc("/application.js", handleApplicationJS)
-	http.HandleFunc("/codes.json", handleCodesJSON)
-	http.HandleFunc("/", handleIndexPage)
-	log.Fatalf("HTTP server exitted: %s", http.ListenAndServe(cfg.Listen, nil))
+	r := mux.NewRouter()
+	r.HandleFunc("/oauth2", handleOAuthCallback)
+	r.HandleFunc("/application.js", handleApplicationJS)
+	r.HandleFunc("/codes.json", handleCodesJSON)
+	r.PathPrefix("/static").HandlerFunc(handleStatics)
+	r.HandleFunc("/", handleIndexPage)
+	log.Fatalf("HTTP server exitted: %s", http.ListenAndServe(cfg.Listen, r))
 }
 
 func getFileContentFallback(filename string) (io.Reader, error) {
@@ -206,4 +211,22 @@ func handleCodesJSON(res http.ResponseWriter, r *http.Request) {
 	res.Header().Set("Content-Type", "application/json")
 	res.Header().Set("Cache-Control", "no-cache")
 	json.NewEncoder(res).Encode(result)
+}
+
+func handleStatics(res http.ResponseWriter, r *http.Request) {
+	req := strings.TrimLeft(r.URL.Path, "/")
+	ext := req[strings.LastIndex(req, "."):len(req)]
+	t := mime.TypeByExtension(ext)
+
+	b, err := Asset(req)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"file": req,
+		}).Errorf("Static file not found")
+		http.Error(res, "I don't have that.", http.StatusNotFound)
+		return
+	}
+
+	res.Header().Set("Content-Type", t)
+	res.Write(b)
 }
