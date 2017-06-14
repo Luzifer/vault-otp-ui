@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>Vault OTP-UI</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap-theme.min.css"
+          integrity="sha256-ZT4HPpdCOt2lvDkXokHuhJfdOKSPFLzeAJik5U/Q+l4=" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/paper/bootstrap.min.css"
+          integrity="sha256-LxKiHTQko0DUCUSgrIK23SYMymvfuj8uxXmblBvVWm0=" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+          integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin="anonymous" />
+
+    <style>
+      body { font-size: 16px; padding-top: 90px; }
+      i { margin-right: 0.4em; }
+      #templates { display: none; }
+      .badge { background-color: #e2e2e2; color: #555; font-size: 15px; font-weight: bold; margin-top: 3px; }
+      .center { text-align: center; }
+      .jumbotron h2 { text-align: center; }
+      .otp-item i { width: 1.1em; }
+      .pbar { background-color: #2196f3; height: 100%; }
+      .pcontainer { background-color: transparent; height: 1px; position: absolute; bottom: 0; left: 0; width: 100%; z-index: 999; }
+      .state-signedin #login { display: none; }
+      .state-signedout #application { display: none; }
+    </style>
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"
+              integrity="sha256-3Jy/GbSLrg0o9y5Z5n1uw0qxZECH7C6OQpVBgNFYa0g=" crossorigin="anonymous"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/respond.js/1.4.2/respond.min.js"
+              integrity="sha256-g6iAfvZp+nDQ2TdTR/VVKJf3bGro4ub5fvWSWVRi2NE=" crossorigin="anonymous"></script>
+    <![endif]-->
+  </head>
+  <body class="state-{{ if .isloggedin }}signedin{{ else }}signedout{{ end }}">
+		<nav class="navbar navbar-fixed-top navbar-default">
+			<div class="container-fluid">
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+						<span class="sr-only">Toggle navigation</span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
+					<a class="navbar-brand" href="#">Vault OTP-UI</a>
+				</div>
+
+				<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+          <form class="navbar-form navbar-left">
+            <div class="form-group">
+              <input type="text" class="form-control" placeholder="Filter" id="filter">
+            </div>
+          </form>
+					<ul class="nav navbar-nav navbar-right">
+						<li><a href="https://github.com/Luzifer/vault-otp-ui"><i class="fa fa-github" aria-hidden="true"></i> Source on Github</a></li>
+					</ul>
+				</div><!-- /.navbar-collapse -->
+			</div><!-- /.container-fluid -->
+
+      <div class="pcontainer">
+        <div class="pbar" style="width: 0%;" id="timer"></div>
+      </div>
+		</nav>
+
+    <div id="application">
+
+      <div class="container">
+        <div class="row">
+          <div class="col-xs-12 col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3 col-lg-6 col-lg-offset-3">
+            <div class="list-group" id="keylist">
+              <!-- FIXME: Remove this -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div> <!-- /#application -->
+
+    <div id="login">
+
+      <div class="container">
+        <div class="row">
+          <div class="col-xs-12 col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3 col-lg-6 col-lg-offset-3">
+
+            <div class="panel panel-default">
+              <div class="panel-heading">Please sign in!</div>
+              <div class="panel-body">
+                <p>
+                  Use Github authentication to sign into your Vault instance and get access to your one-time passwords:
+                </p>
+                <p class="center">
+                  <a href="{{ .authurl }}" class="btn btn-primary"><i class="fa fa-github" aria-hidden="true"></i> Sign-in with Github</a>
+                </p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div> <!-- /#login -->
+
+    <div id="templates">
+      <div id="otp-item">
+        <a href="#" class="list-group-item otp-item">
+          <span class="badge">145 369</span>
+          <i class="fa fa-key"></i>
+          <span class="title">Some Site</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"
+            integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"
+            integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.7.1/clipboard.min.js"
+            integrity="sha256-Daf8GuI2eLKHJlOWLRR/zRy9Clqcj4TUSumbxYH9kGI=" crossorigin="anonymous"></script>
+    <!-- Application specific JavaScript -->
+    <script src="application.js"></script>
+  </body>
+</html>
