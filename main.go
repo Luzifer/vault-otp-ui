@@ -5,6 +5,7 @@ package main
 import (
 	"bytes"
 	"crypto/sha1"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -184,18 +185,39 @@ func handleOAuthCallback(res http.ResponseWriter, r *http.Request) {
 func handleCodesJSON(res http.ResponseWriter, r *http.Request) {
 	sess, _ := cookieStore.Get(r, sessionName)
 	iAccessToken, hasAccessToken := sess.Values["access_token"]
+	iToken := sess.Values["vault_token"]
 
 	if !hasAccessToken {
 		http.Error(res, `{"error":"Not logged in"}`, http.StatusUnauthorized)
 		return
 	}
-
 	accessToken := iAccessToken.(string)
 
-	tokens, err := getSecretsFromVault(accessToken)
+	var tok string
+	if iToken != nil {
+		tok = iToken.(string)
+		log.WithFields(log.Fields{"token": hashSecret(tok)}).Debugf("Restored token from Session")
+	}
+
+	tok, err := useOrRenewToken(tok, accessToken)
+	if err != nil {
+		log.Errorf("Unable to authorize against vault: %s", err)
+		http.Error(res, `{"error":"Unexpected error while fetching tokens"}`, http.StatusInternalServerError)
+		return
+	}
+	log.WithFields(log.Fields{"token": hashSecret(tok)}).Debugf("Checked / renewed token")
+
+	tokens, err := getSecretsFromVault(tok)
 	if err != nil {
 		log.Errorf("Unable to fetch codes: %s", err)
 		http.Error(res, `{"error":"Unexpected error while fetching tokens"}`, http.StatusInternalServerError)
+		return
+	}
+
+	sess.Values["vault_token"] = tok
+	if err := sess.Save(r, res); err != nil {
+		log.Errorf("Was not able to set the cookie: %s", err)
+		http.Error(res, "Something went wrong while fetching token. Sorry.", http.StatusInternalServerError)
 		return
 	}
 
@@ -229,4 +251,8 @@ func handleStatics(res http.ResponseWriter, r *http.Request) {
 
 	res.Header().Set("Content-Type", t)
 	res.Write(b)
+}
+
+func hashSecret(in string) string {
+	return fmt.Sprintf("sha256:%x", sha256.Sum256([]byte(in)))
 }

@@ -8,9 +8,9 @@ import (
 	"sync"
 	"time"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/hashicorp/vault/api"
 	"github.com/pquerna/otp/totp"
-	"github.com/prometheus/common/log"
 )
 
 type token struct {
@@ -50,7 +50,36 @@ func (t tokenList) LongestName() (l int) {
 	return
 }
 
-func getSecretsFromVault(accessToken string) ([]*token, error) {
+func useOrRenewToken(tok, accessToken string) (string, error) {
+	client, err := api.NewClient(&api.Config{
+		Address: cfg.Vault.Address,
+	})
+
+	if err != nil {
+		return "", fmt.Errorf("Unable to create client: %s", err)
+	}
+
+	if tok != "" {
+		client.SetToken(tok)
+		if s, err := client.Auth().Token().LookupSelf(); err == nil && s.Data != nil {
+			log.WithFields(log.Fields{"token": hashSecret(tok)}).Debugf("Token is valid for another %vs", s.Data["ttl"])
+			return tok, nil
+		} else {
+			log.WithFields(log.Fields{"token": hashSecret(tok)}).Debugf("Token did not met requirements: err = %s", err)
+			if s != nil {
+				log.WithFields(log.Fields{"token": hashSecret(tok)}).Debugf("Token did not met requirements: data = %v", s.Data)
+			}
+		}
+	}
+
+	if s, err := client.Logical().Write("auth/github/login", map[string]interface{}{"token": accessToken}); err != nil || s.Auth == nil {
+		return "", fmt.Errorf("Login did not work: Error = %s", err)
+	} else {
+		return s.Auth.ClientToken, nil
+	}
+}
+
+func getSecretsFromVault(tok string) ([]*token, error) {
 	client, err := api.NewClient(&api.Config{
 		Address: cfg.Vault.Address,
 	})
@@ -59,11 +88,7 @@ func getSecretsFromVault(accessToken string) ([]*token, error) {
 		return nil, fmt.Errorf("Unable to create client: %s", err)
 	}
 
-	if s, err := client.Logical().Write("auth/github/login", map[string]interface{}{"token": accessToken}); err != nil || s.Auth == nil {
-		return nil, fmt.Errorf("Login did not work: Error = %s", err)
-	} else {
-		client.SetToken(s.Auth.ClientToken)
-	}
+	client.SetToken(tok)
 
 	key := cfg.Vault.Prefix
 
