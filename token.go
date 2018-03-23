@@ -79,7 +79,7 @@ func useOrRenewToken(tok, accessToken string) (string, error) {
 	}
 }
 
-func getSecretsFromVault(tok string) ([]*token, error) {
+func getSecretsFromVault(tok string, pointOfTime time.Time) ([]*token, error) {
 	client, err := api.NewClient(&api.Config{
 		Address: cfg.Vault.Address,
 	})
@@ -112,7 +112,7 @@ func getSecretsFromVault(tok string) ([]*token, error) {
 			case key := <-scanPool:
 				go scanKeyForSubKeys(client, key, scanPool, keyPoolChan, wg)
 			case key := <-keyPoolChan:
-				go fetchTokenFromKey(client, key, respChan, wg)
+				go fetchTokenFromKey(client, key, respChan, wg, pointOfTime)
 			case t := <-respChan:
 				resp = append(resp, t)
 			case <-done:
@@ -159,7 +159,7 @@ func scanKeyForSubKeys(client *api.Client, key string, subKeyChan, tokenKeyChan 
 	}
 }
 
-func fetchTokenFromKey(client *api.Client, k string, respChan chan *token, wg *sync.WaitGroup) {
+func fetchTokenFromKey(client *api.Client, k string, respChan chan *token, wg *sync.WaitGroup, pointOfTime time.Time) {
 	defer wg.Done()
 
 	data, err := client.Logical().Read(k)
@@ -182,7 +182,7 @@ func fetchTokenFromKey(client *api.Client, k string, respChan chan *token, wg *s
 		switch k {
 		case cfg.Vault.SecretField:
 			tok.Secret = v.(string)
-			tok.GenerateCode(time.Now())
+			tok.GenerateCode(pointOfTime)
 		case "code":
 			tok.Code = v.(string)
 		case "name":

@@ -207,7 +207,12 @@ func handleCodesJSON(res http.ResponseWriter, r *http.Request) {
 	}
 	log.WithFields(log.Fields{"token": hashSecret(tok)}).Debugf("Checked / renewed token")
 
-	tokens, err := getSecretsFromVault(tok)
+	pointOfTime := time.Now()
+	if r.URL.Query().Get("it") == "next" {
+		pointOfTime = pointOfTime.Add(time.Duration(30-(pointOfTime.Second()%30)) * time.Second)
+	}
+
+	tokens, err := getSecretsFromVault(tok, pointOfTime)
 	if err != nil {
 		log.Errorf("Unable to fetch codes: %s", err)
 		http.Error(res, `{"error":"Unexpected error while fetching tokens"}`, http.StatusInternalServerError)
@@ -221,13 +226,12 @@ func handleCodesJSON(res http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	n := time.Now()
 	result := struct {
 		Tokens   []*token  `json:"tokens"`
 		NextWrap time.Time `json:"next_wrap"`
 	}{
 		Tokens:   tokens,
-		NextWrap: n.Add(time.Duration(30-(n.Second()%30)) * time.Second),
+		NextWrap: pointOfTime.Add(time.Duration(30-(pointOfTime.Second()%30)) * time.Second),
 	}
 
 	res.Header().Set("Content-Type", "application/json")

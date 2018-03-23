@@ -1,5 +1,12 @@
 currentTimeout = 0
-clipboard = undefined
+clipboard = null
+preFetch = null
+
+fetchInProgress = false
+serverConnectionError = false
+
+iterationCurrent = 'current'
+iterationNext = 'next'
 
 # document-ready function to start Javascript processing
 $ ->
@@ -38,20 +45,38 @@ delay = (delayMSecs, fkt) ->
   window.setTimeout fkt, delayMSecs
 
 # fetchCodes contacts the backend to receive JSON containing current codes
-fetchCodes = () ->
+fetchCodes = (iteration) ->
+  if fetchInProgress
+    return
+
+  fetchInProgress = true
+
+  if iteration == iterationCurrent
+    successFunc = updateCodes
+  else
+    successFunc = updatePreFetch
+
+  if iteration == iterationCurrent and preFetch != null
+    data = preFetch
+    preFetch = null
+    successFunc data
+    return
+
   $.ajax
-    url: 'codes.json',
-    success: updateCodes,
+    url: "codes.json?it=#{iteration}",
+    success: successFunc,
     dataType: 'json',
     error: () ->
-      createAlert 'danger', 'Oops.', 'Server could not be contacted. Maybe you (or the server) are offline? I will retry in a few seconds.', 5000
-      delay 5000, fetchCodes
+      fetchInProgress = false
+      createAlert 'danger', 'Oops.', 'Server could not be contacted. Maybe you (or the server) are offline? Reload to try again.', 0
+      serverConnectionError = true
     statusCode:
       401: () ->
         window.location.reload()
       500: () ->
-        createAlert 'danger', 'Oops.', 'The server responded with an internal error. I will retry in a few seconds.', 2000
-        delay 2000, fetchCodes
+        fetchInProgress = false
+        createAlert 'danger', 'Oops.', 'The server responded with an internal error. Reload to try again.', 0
+        serverConnectionError = true
 
 # filterChange is called when changing the filter field and matches the
 # titles of all shown entries. Those not matching the given regular expression
@@ -71,13 +96,17 @@ initializeApplication = () ->
   $('#keylist').empty()
   $('#filter').bind 'keyup', filterChange
   tick 500, refreshTimerProgress
-  fetchCodes()
+  fetchCodes iterationCurrent
 
 # refreshTimerProgress updates the top progressbar to display the
 # remaining time until the one-time-passwords changes
 refreshTimerProgress = () ->
   secondsLeft = timeLeft()
   $('#timer').css 'width', "#{secondsLeft / 30 * 100}%"
+
+  if secondsLeft < 10 and preFetch == null and not serverConnectionError
+    # Do a pre-fetch to provide a seamless experience
+    fetchCodes iterationNext
 
 # tick is a convenience wrapper to swap parameters of setInterval
 tick = (delay, fkt) ->
@@ -108,4 +137,10 @@ updateCodes = (data) ->
 
   filterChange()
 
-  delay timeLeft()*1000, fetchCodes
+  delay timeLeft()*1000, ->
+    fetchCodes iterationCurrent
+  fetchInProgress = false
+
+updatePreFetch = (data) ->
+  preFetch = data
+  fetchInProgress = false
