@@ -115,6 +115,7 @@ func getSecretsFromVault(tok string, pointOfTime time.Time) ([]*token, error) {
 				go fetchTokenFromKey(client, key, respChan, wg, pointOfTime)
 			case t := <-respChan:
 				resp = append(resp, t)
+				wg.Done()
 			case <-done:
 				close(scanPool)
 				close(keyPoolChan)
@@ -199,5 +200,6 @@ func fetchTokenFromKey(client *api.Client, k string, respChan chan *token, wg *s
 		return
 	}
 
+	wg.Add(1)
 	respChan <- tok
 }
