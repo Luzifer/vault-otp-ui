@@ -10,10 +10,10 @@
     <link rel="manifest" href="static/manifest.json">
 
     <!-- Bootstrap -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap-theme.min.css"
-          integrity="sha256-ZT4HPpdCOt2lvDkXokHuhJfdOKSPFLzeAJik5U/Q+l4=" crossorigin="anonymous" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/paper/bootstrap.min.css"
-          integrity="sha256-LxKiHTQko0DUCUSgrIK23SYMymvfuj8uxXmblBvVWm0=" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha256-LA89z+k9fjgMKQ/kq4OO2Mrf8VltYml/VES+Rg0fh20=" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/4.0.0/flatly/bootstrap.min.css"
+          integrity="sha256-uR+4waFpGD6COqOrSkm2HiJwc668qfgW3kidhhaOyYk=" crossorigin="anonymous" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
           integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin="anonymous" />
 
@@ -23,13 +23,13 @@
       #initLoader i { margin-right: unset; }
       #templates { display: none; }
       .alert { background-image: none; } 
-      .badge { background-color: #e2e2e2; color: #555; font-size: 15px; font-weight: bold; margin-top: 3px; }
+      .badge { background-color: #2980b9; color: #ddd; font-size: 15px; font-weight: bold; margin-top: 3px; }
       .center { text-align: center; }
       .fixed { bottom: 0; position: fixed; width: 100%; z-index: 999; }
       .jumbotron h2 { text-align: center; }
       .otp-item i { width: 1.1em; }
-      .pbar { background-color: #2196f3; height: 100%; }
-      .pcontainer { background-color: transparent; height: 1px; position: absolute; bottom: 0; left: 0; width: 100%; z-index: 999; }
+      .pbar { background-color: #18BC9C; height: 100%; }
+      .pcontainer { background-color: #E74C3C; border-width: 1px 0 1px 0; border-color: #333; height: 3px; position: absolute; bottom: 0; left: 0; width: 100%; z-index: 999; }
       .state-signedin #login { display: none; }
       .state-signedout #application { display: none; }
     </style>
@@ -44,26 +44,21 @@
     <![endif]-->
   </head>
   <body class="state-{{ if .isloggedin }}signedin{{ else }}signedout{{ end }}">
-		<nav class="navbar navbar-fixed-top navbar-default">
+		<nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
 			<div class="container-fluid">
-				<div class="navbar-header">
-					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
-						<span class="sr-only">Toggle navigation</span>
-						<span class="icon-bar"></span>
-						<span class="icon-bar"></span>
-						<span class="icon-bar"></span>
-					</button>
-					<a class="navbar-brand" href="#">Vault OTP-UI</a>
-				</div>
+        <a class="navbar-brand mr-5" href="#">Vault OTP-UI</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
 
-				<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-          <form class="navbar-form navbar-left">
-            <div class="form-group">
-              <input type="text" class="form-control" placeholder="Filter" id="filter">
-            </div>
+				<div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <form class="form-inline mr-auto">
+            <input type="text" class="form-control" placeholder="Filter" id="filter">
           </form>
-					<ul class="nav navbar-nav navbar-right">
-						<li><a href="https://github.com/Luzifer/vault-otp-ui"><i class="fa fa-github" aria-hidden="true"></i> Source on Github</a></li>
+					<ul class="navbar-nav my-2 my-lg-0">
+						<li class="nav-item">
+              <a class="nav-link" href="https://github.com/Luzifer/vault-otp-ui"><i class="fa fa-github" aria-hidden="true"></i> Source on Github</a>
+            </li>
 					</ul>
 				</div><!-- /.navbar-collapse -->
 			</div><!-- /.container-fluid -->
@@ -75,18 +70,19 @@
 
     <div id="application">
       <div class="container-fluid fixed">
-        <div class="row">
-          <div class="col-xs-10 col-xs-offset-1 col-sm-10 col-sm-offset-1 col-md-8 col-md-offset-2 col-lg-4 col-lg-offset-4" id="messagecontainer"></div>
+        <div class="row justify-content-md-center">
+          <div class="col-xs-10 col-sm-10 col-md-8 col-lg-4" id="messagecontainer"></div>
         </div>
       </div>
 
       <div class="container">
 
-        <div class="row">
-          <div class="col-xs-10 col-xs-offset-1 col-md-4 col-md-offset-4 center" id="initLoader">
+        <div class="row justify-content-md-center">
+          <div class="col-xs-10 col-md-4 center" id="initLoader">
             <i class="fa fa-refresh fa-spin fa-5x"></i><br>
           </div>
-          <div class="col-xs-12 col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3 col-lg-6 col-lg-offset-3">
+          <div class="w-100"></div>
+          <div class="col-xs-12 col-sm-8 col-md-6 col-lg-6">
             <div class="list-group" id="keylist">
               <!-- FIXME: Remove this -->
             </div>
@@ -122,10 +118,12 @@
 
     <div id="templates">
       <div id="tpl-otp-item">
-        <a class="list-group-item otp-item">
+        <a class="list-group-item d-flex justify-content-between align-items-center otp-item">
+          <span>
+            <i class="fa fa-fw"></i>
+            <span class="title">Some Site</span>
+          </span>
           <span class="badge">145 369</span>
-          <i class="fa fa-fw"></i>
-          <span class="title">Some Site</span>
         </a>
       </div>
       <div id="tpl-message">
@@ -139,11 +137,11 @@
     </div>
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"
-            integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"
+            integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"
-            integrity="sha256-U5ZEeKfGNOja007MMD3YBI0A3OSZOQbeG6z2f2Y0hu8=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0/js/bootstrap.min.js"
+            integrity="sha256-5+02zu5UULQkO7w1GIr6vftCgMfFdZcAHeDtFnKZsBs=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.7.1/clipboard.min.js"
             integrity="sha256-Daf8GuI2eLKHJlOWLRR/zRy9Clqcj4TUSumbxYH9kGI=" crossorigin="anonymous"></script>
     <!-- Application specific JavaScript -->

@@ -147,11 +147,11 @@
       }
     });
     clipboard.on('success', function(e) {
-      createAlert('info', 'Success', 'Code copied to clipboard', 1000);
+      createAlert('success', 'Success:', 'Code copied to clipboard', 1000);
       return e.blur();
     });
     clipboard.on('error', function(e) {
-      return createAlert('danger', 'Oops', 'Copy to clipboard failed', 2000);
+      return createAlert('danger', 'Oops.', 'Copy to clipboard failed', 2000);
     });
     filterChange();
     delay(timeLeft() * 1000, function() {

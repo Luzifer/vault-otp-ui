@@ -137,11 +137,11 @@ updateCodes = (data) ->
       $(trigger).find('.badge').text().replace(' ', '')
 
   clipboard.on 'success', (e) ->
-    createAlert 'info', 'Success', 'Code copied to clipboard', 1000
+    createAlert 'success', 'Success:', 'Code copied to clipboard', 1000
     e.blur()
 
   clipboard.on 'error', (e) ->
-    createAlert 'danger', 'Oops', 'Copy to clipboard failed', 2000
+    createAlert 'danger', 'Oops.', 'Copy to clipboard failed', 2000
 
   filterChange()
 
