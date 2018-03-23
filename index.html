@@ -24,6 +24,7 @@
       .alert { background-image: none; } 
       .badge { background-color: #e2e2e2; color: #555; font-size: 15px; font-weight: bold; margin-top: 3px; }
       .center { text-align: center; }
+      .fixed { bottom: 0; position: fixed; width: 100%; z-index: 999; }
       .jumbotron h2 { text-align: center; }
       .otp-item i { width: 1.1em; }
       .pbar { background-color: #2196f3; height: 100%; }
@@ -72,12 +73,13 @@
 		</nav>
 
     <div id="application">
+      <div class="container-fluid fixed">
+        <div class="row">
+          <div class="col-xs-10 col-xs-offset-1 col-sm-10 col-sm-offset-1 col-md-8 col-md-offset-2 col-lg-4 col-lg-offset-4" id="messagecontainer"></div>
+        </div>
+      </div>
 
       <div class="container">
-        <div class="row">
-          <div class="col-xs-12 col-sm-10 col-sm-offset-1 col-md-8 col-md-offset-2 col-lg-8 col-lg-offset-2" id="messagecontainer">
-          </div>
-        </div>
 
         <div class="row">
           <div class="col-xs-12 col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3 col-lg-6 col-lg-offset-3">
@@ -116,16 +118,18 @@
 
     <div id="templates">
       <div id="tpl-otp-item">
-        <a href="#" class="list-group-item otp-item">
+        <a class="list-group-item otp-item">
           <span class="badge">145 369</span>
           <i class="fa"></i>
           <span class="title">Some Site</span>
         </a>
       </div>
       <div id="tpl-message">
-        <div class="alert alert-dismissible" role="alert">
-          <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-          <strong class="keyword">Warning!</strong> <span class="message"></span>
+        <div class="row">
+          <div class="alert alert-dismissible col-sm-12 col-xs-12 col-md-12 col-lg-12" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <strong class="keyword">Warning!</strong> <span class="message"></span>
+          </div>
         </div>
       </div>
     </div>

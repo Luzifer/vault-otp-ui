@@ -1,6 +1,6 @@
 package main
 
-//go:generate go-bindata -pkg $GOPACKAGE -o assets.go index.html application.js static
+//go:generate go-bindata -pkg $GOPACKAGE -o assets.go index.html application.js static/...
 
 import (
 	"bytes"

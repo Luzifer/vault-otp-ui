@@ -36,9 +36,9 @@
     var alrt, tpl;
     tpl = $('#tpl-message').html();
     alrt = $(tpl);
-    alrt.addClass("alert-" + type);
-    alrt.find('.keyword').text(keyword);
-    alrt.find('.message').text(message);
+    alrt.find('.alert').addClass("alert-" + type);
+    alrt.find('.alert').find('.keyword').text(keyword);
+    alrt.find('.alert').find('.message').text(message);
     alrt.appendTo($('#messagecontainer'));
     if (timeout > 0) {
       return delay(timeout, function() {
@@ -144,6 +144,13 @@
       text: function(trigger) {
         return $(trigger).find('.badge').text().replace(' ', '');
       }
+    });
+    clipboard.on('success', function(e) {
+      createAlert('info', 'Success', 'Code copied to clipboard', 1000);
+      return e.blur();
+    });
+    clipboard.on('error', function(e) {
+      return createAlert('danger', 'Oops', 'Copy to clipboard failed', 2000);
     });
     filterChange();
     delay(timeLeft() * 1000, function() {
