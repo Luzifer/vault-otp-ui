@@ -127,6 +127,7 @@ updateCodes = (data) ->
   if clipboard
     clipboard.destroy()
 
+  $('#initLoader').hide()
   $('#keylist').empty()
   for token in data.tokens
     createOTPItem token

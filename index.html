@@ -20,6 +20,7 @@
     <style>
       body { font-size: 16px; padding-top: 90px; }
       i { margin-right: 0.4em; }
+      #initLoader i { margin-right: unset; }
       #templates { display: none; }
       .alert { background-image: none; } 
       .badge { background-color: #e2e2e2; color: #555; font-size: 15px; font-weight: bold; margin-top: 3px; }
@@ -82,6 +83,9 @@
       <div class="container">
 
         <div class="row">
+          <div class="col-xs-10 col-xs-offset-1 col-md-4 col-md-offset-4 center" id="initLoader">
+            <i class="fa fa-refresh fa-spin fa-5x"></i><br>
+          </div>
           <div class="col-xs-12 col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3 col-lg-6 col-lg-offset-3">
             <div class="list-group" id="keylist">
               <!-- FIXME: Remove this -->

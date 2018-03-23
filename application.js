@@ -134,6 +134,7 @@
     if (clipboard) {
       clipboard.destroy();
     }
+    $('#initLoader').hide();
     $('#keylist').empty();
     ref = data.tokens;
     for (i = 0, len = ref.length; i < len; i++) {
