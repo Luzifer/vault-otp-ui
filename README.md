@@ -1,3 +1,8 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/Luzifer/vault-otp-ui)](https://goreportcard.com/report/github.com/Luzifer/vault-otp-ui)
+![](https://badges.fyi/github/license/Luzifer/vault-otp-ui)
+![](https://badges.fyi/github/downloads/Luzifer/vault-otp-ui)
+![](https://badges.fyi/github/latest-release/Luzifer/vault-otp-ui)
+
 # Luzifer / vault-otp-ui
 
 `vault-otp-ui` is a viewer for time based one-time passwords whose secret is stored in [Vault](https://vaultproject.io/). After the Github oAuth2 login the interface features a clean list of tokens with their corresponding account names, a (regular expression capable) filter function, automatic refresh of the shown tokens after they got invalid and a mobile-friendly interface which allows the usage on any mobile phone. Additionally with all modern browsers you should be able to copy the one-time password into your clipboard with just one click!
