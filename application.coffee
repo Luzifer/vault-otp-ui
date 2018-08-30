@@ -18,7 +18,7 @@ createOTPItem = (item) ->
   tpl = $('#tpl-otp-item').html()
 
   otpItem = $(tpl)
-  otpItem.find('.badge').text item.code.replace(/^(.{3})(.{3})$/, '$1 $2')
+  otpItem.find('.badge').text item.code.replace(/^([0-9]{3})([0-9]{3})$/, '$1 $2').replace(/^([0-9]{2})([0-9]{3})([0-9]{3})$/, '$1 $2 $3')
   otpItem.find('.title').text item.name
   otpItem.find('i.fa').addClass "fa-#{item.icon}"
 
@@ -134,7 +134,7 @@ updateCodes = (data) ->
 
   clipboard = new Clipboard '.otp-item',
     text: (trigger) ->
-      $(trigger).find('.badge').text().replace(' ', '')
+      $(trigger).find('.badge').text().replace(/ /g, '')
 
   clipboard.on 'success', (e) ->
     createAlert 'success', 'Success:', 'Code copied to clipboard', 1000

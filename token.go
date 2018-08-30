@@ -10,6 +10,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/hashicorp/vault/api"
+	"github.com/pquerna/otp"
 	"github.com/pquerna/otp/totp"
 )
 
@@ -18,6 +19,7 @@ type token struct {
 	Icon   string `json:"icon"`
 	Name   string `json:"name"`
 	Secret string `json:"-"`
+	Digits string `json:"digits"`
 }
 
 func (t *token) GenerateCode(in time.Time) error {
@@ -27,8 +29,19 @@ func (t *token) GenerateCode(in time.Time) error {
 		secret = secret + strings.Repeat("=", 8-n)
 	}
 
+	opts := totp.ValidateOpts{
+		Period:    30,
+		Skew:      1,
+		Digits:    otp.DigitsSix,
+		Algorithm: otp.AlgorithmSHA1,
+	}
+
+	if t.Digits == "8" {
+		opts.Digits = otp.DigitsEight
+	}
+
 	var err error
-	t.Code, err = totp.GenerateCode(strings.ToUpper(secret), in)
+	t.Code, err = totp.GenerateCodeCustom(strings.ToUpper(secret), in, opts)
 	return err
 }
 
@@ -183,7 +196,6 @@ func fetchTokenFromKey(client *api.Client, k string, respChan chan *token, wg *s
 		switch k {
 		case cfg.Vault.SecretField:
 			tok.Secret = v.(string)
-			tok.GenerateCode(pointOfTime)
 		case "code":
 			tok.Code = v.(string)
 		case "name":
@@ -192,8 +204,12 @@ func fetchTokenFromKey(client *api.Client, k string, respChan chan *token, wg *s
 			tok.Name = v.(string)
 		case "icon":
 			tok.Icon = v.(string)
+		case "digits":
+			tok.Digits = v.(string)
 		}
 	}
+
+	tok.GenerateCode(pointOfTime)
 
 	if tok.Code == "" {
 		// Nothing ended in us having a code, does not seem to be something for us
