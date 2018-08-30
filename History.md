@@ -1,3 +1,9 @@
+# 0.5.0 / 2018-08-30
+
+  * Update vendors, switch to dep
+  * Support 8-digit tokens
+  * Fix license: Replace placeholders
+
 # 0.4.0 / 2018-03-23
 
   * Bootstrap 4.0.0, re-theme to "flatly"
