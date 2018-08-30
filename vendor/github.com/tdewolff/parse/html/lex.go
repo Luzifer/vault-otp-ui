@@ -1,15 +1,13 @@
 // Package html is an HTML5 lexer following the specifications at http://www.w3.org/TR/html5/syntax.html.
-package html
+package html // import "github.com/tdewolff/parse/html"
 
 import (
 	"io"
 	"strconv"
 
-	"github.com/tdewolff/buffer"
 	"github.com/tdewolff/parse"
+	"github.com/tdewolff/parse/buffer"
 )
-
-////////////////////////////////////////////////////////////////
 
 // TokenType determines the type of token, eg. a number or a semicolon.
 type TokenType uint32
@@ -25,6 +23,8 @@ const (
 	EndTagToken
 	AttributeToken
 	TextToken
+	SvgToken
+	MathToken
 )
 
 // String returns the string representation of a TokenType.
@@ -48,6 +48,10 @@ func (tt TokenType) String() string {
 		return "Attribute"
 	case TextToken:
 		return "Text"
+	case SvgToken:
+		return "Svg"
+	case MathToken:
+		return "Math"
 	}
 	return "Invalid(" + strconv.Itoa(int(tt)) + ")"
 }
@@ -56,7 +60,8 @@ func (tt TokenType) String() string {
 
 // Lexer is the state for the lexer.
 type Lexer struct {
-	r *buffer.Lexer
+	r   *buffer.Lexer
+	err error
 
 	rawTag Hash
 	inTag  bool
@@ -74,12 +79,15 @@ func NewLexer(r io.Reader) *Lexer {
 
 // Err returns the error encountered during lexing, this is often io.EOF but also other errors can be returned.
 func (l *Lexer) Err() error {
+	if l.err != nil {
+		return l.err
+	}
 	return l.r.Err()
 }
 
-// Free frees up bytes of length n from previously shifted tokens.
-func (l *Lexer) Free(n int) {
-	l.r.Free(n)
+// Restore restores the NULL byte at the end of the buffer.
+func (l *Lexer) Restore() {
+	l.r.Restore()
 }
 
 // Next returns the next Token. It returns ErrorToken when an error was encountered. Using Err() one can retrieve the error message.
@@ -95,7 +103,7 @@ func (l *Lexer) Next() (TokenType, []byte) {
 			}
 			break
 		}
-		if c == 0 {
+		if c == 0 && l.r.Err() != nil {
 			return ErrorToken, nil
 		} else if c != '>' && (c != '/' || l.r.Peek(1) != '>') {
 			return AttributeToken, l.shiftAttribute()
@@ -124,20 +132,23 @@ func (l *Lexer) Next() (TokenType, []byte) {
 		c = l.r.Peek(0)
 		if c == '<' {
 			c = l.r.Peek(1)
+			isEndTag := c == '/' && l.r.Peek(2) != '>' && (l.r.Peek(2) != 0 || l.r.PeekErr(2) == nil)
 			if l.r.Pos() > 0 {
-				if c == '/' && l.r.Peek(2) != 0 || 'a' <= c && c <= 'z' || 'A' <= c && c <= 'Z' || c == '!' || c == '?' {
+				if isEndTag || 'a' <= c && c <= 'z' || 'A' <= c && c <= 'Z' || c == '!' || c == '?' {
+					// return currently buffered texttoken so that we can return tag next iteration
 					return TextToken, l.r.Shift()
 				}
-			} else if c == '/' && l.r.Peek(2) != 0 {
+			} else if isEndTag {
 				l.r.Move(2)
-				if c = l.r.Peek(0); c != '>' && !('a' <= c && c <= 'z' || 'A' <= c && c <= 'Z') {
+				// only endtags that are not followed by > or EOF arrive here
+				if c = l.r.Peek(0); !('a' <= c && c <= 'z' || 'A' <= c && c <= 'Z') {
 					return CommentToken, l.shiftBogusComment()
 				}
 				return EndTagToken, l.shiftEndTag()
 			} else if 'a' <= c && c <= 'z' || 'A' <= c && c <= 'Z' {
 				l.r.Move(1)
 				l.inTag = true
-				return StartTagToken, l.shiftStartTag()
+				return l.shiftStartTag()
 			} else if c == '!' {
 				l.r.Move(2)
 				return l.readMarkup()
@@ -145,7 +156,7 @@ func (l *Lexer) Next() (TokenType, []byte) {
 				l.r.Move(1)
 				return CommentToken, l.shiftBogusComment()
 			}
-		} else if c == 0 {
+		} else if c == 0 && l.r.Err() != nil {
 			if l.r.Pos() > 0 {
 				return TextToken, l.r.Shift()
 			}
@@ -172,7 +183,7 @@ func (l *Lexer) AttrVal() []byte {
 func (l *Lexer) shiftRawText() []byte {
 	if l.rawTag == Plaintext {
 		for {
-			if l.r.Peek(0) == 0 {
+			if l.r.Peek(0) == 0 && l.r.Err() != nil {
 				return l.r.Shift()
 			}
 			l.r.Move(1)
@@ -227,15 +238,16 @@ func (l *Lexer) shiftRawText() []byte {
 									inScript = false
 								}
 							}
-						} else if c == 0 {
+						} else if c == 0 && l.r.Err() != nil {
 							return l.r.Shift()
+						} else {
+							l.r.Move(1)
 						}
-						l.r.Move(1)
 					}
 				} else {
 					l.r.Move(1)
 				}
-			} else if c == 0 {
+			} else if c == 0 && l.r.Err() != nil {
 				return l.r.Shift()
 			} else {
 				l.r.Move(1)
@@ -248,7 +260,7 @@ func (l *Lexer) readMarkup() (TokenType, []byte) {
 	if l.at('-', '-') {
 		l.r.Move(2)
 		for {
-			if l.r.Peek(0) == 0 {
+			if l.r.Peek(0) == 0 && l.r.Err() != nil {
 				return CommentToken, l.r.Shift()
 			} else if l.at('-', '-', '>') {
 				l.text = l.r.Lexeme()[4:]
@@ -264,7 +276,7 @@ func (l *Lexer) readMarkup() (TokenType, []byte) {
 	} else if l.at('[', 'C', 'D', 'A', 'T', 'A', '[') {
 		l.r.Move(7)
 		for {
-			if l.r.Peek(0) == 0 {
+			if l.r.Peek(0) == 0 && l.r.Err() != nil {
 				return TextToken, l.r.Shift()
 			} else if l.at(']', ']', '>') {
 				l.r.Move(3)
@@ -279,9 +291,11 @@ func (l *Lexer) readMarkup() (TokenType, []byte) {
 				l.r.Move(1)
 			}
 			for {
-				if c := l.r.Peek(0); c == '>' || c == 0 {
+				if c := l.r.Peek(0); c == '>' || c == 0 && l.r.Err() != nil {
 					l.text = l.r.Lexeme()[9:]
-					l.r.Move(1)
+					if c == '>' {
+						l.r.Move(1)
+					}
 					return DoctypeToken, l.r.Shift()
 				}
 				l.r.Move(1)
@@ -298,7 +312,7 @@ func (l *Lexer) shiftBogusComment() []byte {
 			l.text = l.r.Lexeme()[2:]
 			l.r.Move(1)
 			return l.r.Shift()
-		} else if c == 0 {
+		} else if c == 0 && l.r.Err() != nil {
 			l.text = l.r.Lexeme()[2:]
 			return l.r.Shift()
 		}
@@ -306,25 +320,38 @@ func (l *Lexer) shiftBogusComment() []byte {
 	}
 }
 
-func (l *Lexer) shiftStartTag() []byte {
+func (l *Lexer) shiftStartTag() (TokenType, []byte) {
 	for {
-		if c := l.r.Peek(0); c == ' ' || c == '>' || c == '/' && l.r.Peek(1) == '>' || c == '\t' || c == '\n' || c == '\r' || c == '\f' || c == 0 {
+		if c := l.r.Peek(0); c == ' ' || c == '>' || c == '/' && l.r.Peek(1) == '>' || c == '\t' || c == '\n' || c == '\r' || c == '\f' || c == 0 && l.r.Err() != nil {
 			break
 		}
 		l.r.Move(1)
 	}
 	l.text = parse.ToLower(l.r.Lexeme()[1:])
 	if h := ToHash(l.text); h == Textarea || h == Title || h == Style || h == Xmp || h == Iframe || h == Script || h == Plaintext || h == Svg || h == Math {
+		if h == Svg || h == Math {
+			data := l.shiftXml(h)
+			if l.err != nil {
+				return ErrorToken, nil
+			}
+
+			l.inTag = false
+			if h == Svg {
+				return SvgToken, data
+			} else {
+				return MathToken, data
+			}
+		}
 		l.rawTag = h
 	}
-	return l.r.Shift()
+	return StartTagToken, l.r.Shift()
 }
 
 func (l *Lexer) shiftAttribute() []byte {
 	nameStart := l.r.Pos()
 	var c byte
 	for { // attribute name state
-		if c = l.r.Peek(0); c == ' ' || c == '=' || c == '>' || c == '/' && l.r.Peek(1) == '>' || c == '\t' || c == '\n' || c == '\r' || c == '\f' || c == 0 {
+		if c = l.r.Peek(0); c == ' ' || c == '=' || c == '>' || c == '/' && l.r.Peek(1) == '>' || c == '\t' || c == '\n' || c == '\r' || c == '\f' || c == 0 && l.r.Err() != nil {
 			break
 		}
 		l.r.Move(1)
@@ -355,14 +382,14 @@ func (l *Lexer) shiftAttribute() []byte {
 				if c == delim {
 					l.r.Move(1)
 					break
-				} else if c == 0 {
+				} else if c == 0 && l.r.Err() != nil {
 					break
 				}
 				l.r.Move(1)
 			}
 		} else { // attribute value unquoted state
 			for {
-				if c := l.r.Peek(0); c == ' ' || c == '>' || c == '\t' || c == '\n' || c == '\r' || c == '\f' || c == 0 {
+				if c := l.r.Peek(0); c == ' ' || c == '>' || c == '\t' || c == '\n' || c == '\r' || c == '\f' || c == 0 && l.r.Err() != nil {
 					break
 				}
 				l.r.Move(1)
@@ -384,7 +411,7 @@ func (l *Lexer) shiftEndTag() []byte {
 			l.text = l.r.Lexeme()[2:]
 			l.r.Move(1)
 			break
-		} else if c == 0 {
+		} else if c == 0 && l.r.Err() != nil {
 			l.text = l.r.Lexeme()[2:]
 			break
 		}
@@ -401,6 +428,53 @@ func (l *Lexer) shiftEndTag() []byte {
 	}
 	l.text = l.text[:end]
 	return parse.ToLower(l.r.Shift())
+}
+
+// shiftXml parses the content of a svg or math tag according to the XML 1.1 specifications, including the tag itself.
+// So far we have already parsed `<svg` or `<math`.
+func (l *Lexer) shiftXml(rawTag Hash) []byte {
+	inQuote := false
+	for {
+		c := l.r.Peek(0)
+		if c == '"' {
+			inQuote = !inQuote
+			l.r.Move(1)
+		} else if c == '<' && !inQuote && l.r.Peek(1) == '/' {
+			mark := l.r.Pos()
+			l.r.Move(2)
+			for {
+				if c = l.r.Peek(0); !('a' <= c && c <= 'z' || 'A' <= c && c <= 'Z') {
+					break
+				}
+				l.r.Move(1)
+			}
+			if h := ToHash(parse.ToLower(parse.Copy(l.r.Lexeme()[mark+2:]))); h == rawTag { // copy so that ToLower doesn't change the case of the underlying slice
+				break
+			}
+		} else if c == 0 {
+			if l.r.Err() == nil {
+				l.err = parse.NewErrorLexer("unexpected null character", l.r)
+			}
+			return l.r.Shift()
+		} else {
+			l.r.Move(1)
+		}
+	}
+
+	for {
+		c := l.r.Peek(0)
+		if c == '>' {
+			l.r.Move(1)
+			break
+		} else if c == 0 {
+			if l.r.Err() == nil {
+				l.err = parse.NewErrorLexer("unexpected null character", l.r)
+			}
+			return l.r.Shift()
+		}
+		l.r.Move(1)
+	}
+	return l.r.Shift()
 }
 
 ////////////////////////////////////////////////////////////////
