@@ -8,10 +8,10 @@ import (
 	"sync"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/hashicorp/vault/api"
 	"github.com/pquerna/otp"
 	"github.com/pquerna/otp/totp"
+	log "github.com/sirupsen/logrus"
 )
 
 type token struct {
