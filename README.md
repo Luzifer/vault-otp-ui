@@ -2,6 +2,7 @@
 ![](https://badges.fyi/github/license/Luzifer/vault-otp-ui)
 ![](https://badges.fyi/github/downloads/Luzifer/vault-otp-ui)
 ![](https://badges.fyi/github/latest-release/Luzifer/vault-otp-ui)
+![](https://knut.in/project-status/vault-otp-ui)
 
 # Luzifer / vault-otp-ui
 
@@ -36,7 +37,3 @@ One of the key questions I found myself asking while developing this was whether
 On the one hand the first solution would work when being offline because it can be cached in the browser. But seriously: I've never seen a OTP query when not being online so this wasn't a valid reason. On the other hand transmitting the secrets into the browser IMHO would be a major security flaw as - given the case you loose control over your browser having all those secrets stored in the local storage - an attacker would have the chance to generate unlimited one-time passwords for your accounts.
 
 In the end I went with the solution to transmit only names and the currently valid code. This means being offline you are not able to generate a new code but also this means you can revoke access to the Vault keys and immediately stop the attackers ability to generate codes on your behalf.
-
-----
-
-![project status](https://d2o84fseuhwkxk.cloudfront.net/vault-otp-ui.svg)
