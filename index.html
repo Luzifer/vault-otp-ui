@@ -9,142 +9,135 @@
 
     <link rel="manifest" href="static/manifest.json">
 
-    <!-- Bootstrap -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0/css/bootstrap.min.css"
-          integrity="sha256-LA89z+k9fjgMKQ/kq4OO2Mrf8VltYml/VES+Rg0fh20=" crossorigin="anonymous" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/4.0.0/flatly/bootstrap.min.css"
-          integrity="sha256-uR+4waFpGD6COqOrSkm2HiJwc668qfgW3kidhhaOyYk=" crossorigin="anonymous" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
-          integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css"
+          integrity="sha256-YLGeXaapI0/5IgZopewRJcFXomhRMlYYjugPLSyNjTY=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootswatch@4.3.1/dist/flatly/bootstrap.min.css"
+          integrity="sha256-0mhswpc4tUm8b+EHmWyk817AlGI+X5NmVsKbJkQ342c=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-vue@2.0.0/dist/bootstrap-vue.min.css"
+          integrity="sha256-98fnCXYEILg6wOwaFWPVePJcizsYZG2U+N95WSWsG3g=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css"
+          integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin="anonymous">
 
     <style>
       body { font-size: 16px; padding-top: 90px; }
       i { margin-right: 0.4em; }
-      #initLoader i { margin-right: unset; }
-      #templates { display: none; }
-      .alert { background-image: none; } 
+      .initLoader i { margin-right: unset; }
+      .alert { background-image: none; }
       .badge { background-color: #2980b9; color: #ddd; font-size: 15px; font-weight: bold; margin-top: 3px; }
       .center { text-align: center; }
       .fixed { bottom: 0; position: fixed; width: 100%; z-index: 999; }
       .jumbotron h2 { text-align: center; }
+      .otp-item { cursor: pointer; }
       .otp-item i { width: 1.1em; }
       .pbar { background-color: #18BC9C; height: 100%; }
       .pcontainer { background-color: #E74C3C; border-width: 1px 0 1px 0; border-color: #333; height: 3px; position: absolute; bottom: 0; left: 0; width: 100%; z-index: 999; }
-      .state-signedin #login { display: none; }
-      .state-signedout #application { display: none; }
     </style>
 
-    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"
-              integrity="sha256-3Jy/GbSLrg0o9y5Z5n1uw0qxZECH7C6OQpVBgNFYa0g=" crossorigin="anonymous"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/respond.js/1.4.2/respond.min.js"
-              integrity="sha256-g6iAfvZp+nDQ2TdTR/VVKJf3bGro4ub5fvWSWVRi2NE=" crossorigin="anonymous"></script>
-    <![endif]-->
   </head>
-  <body class="state-{{ if .isloggedin }}signedin{{ else }}signedout{{ end }}">
-		<nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
-			<div class="container-fluid">
-        <a class="navbar-brand mr-5" href="#">Vault OTP-UI</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-
-				<div class="collapse navbar-collapse" id="navbarSupportedContent">
-          <form class="form-inline mr-auto">
-            <input type="text" class="form-control" placeholder="Filter" id="filter">
-          </form>
-					<ul class="navbar-nav my-2 my-lg-0">
-						<li class="nav-item">
-              <a class="nav-link" href="https://github.com/Luzifer/vault-otp-ui"><i class="fa fa-github" aria-hidden="true"></i> Source on Github</a>
-            </li>
-					</ul>
-				</div><!-- /.navbar-collapse -->
-			</div><!-- /.container-fluid -->
-
-      <div class="pcontainer">
-        <div class="pbar" style="width: 0%;" id="timer"></div>
-      </div>
-		</nav>
+  <body>
 
     <div id="application">
-      <div class="container-fluid fixed">
-        <div class="row justify-content-md-center">
-          <div class="col-xs-10 col-sm-10 col-md-8 col-lg-4" id="messagecontainer"></div>
+
+      <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+          <a class="navbar-brand mr-5" href="#">Vault OTP-UI</a>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <form class="form-inline mr-auto">
+              <input type="text" class="form-control" placeholder="Filter" v-model="filter">
+            </form>
+            <ul class="navbar-nav my-2 my-lg-0">
+              <li class="nav-item">
+                <a class="nav-link" href="https://github.com/Luzifer/vault-otp-ui"><i class="fa fa-github" aria-hidden="true"></i> Source on Github</a>
+              </li>
+            </ul>
+          </div><!-- /.navbar-collapse -->
+        </div><!-- /.container-fluid -->
+
+        <div class="pcontainer">
+          <div class="pbar" :style="{ width: `${timeLeftPerc}%` }" id="timer"></div>
         </div>
-      </div>
+      </nav>
 
-      <div class="container">
 
-        <div class="row justify-content-md-center">
-          <div class="col-xs-10 col-md-4 center" id="initLoader">
-            <i class="fa fa-refresh fa-spin fa-5x"></i><br>
-          </div>
-          <div class="w-100"></div>
-          <div class="col-xs-12 col-sm-8 col-md-6 col-lg-6">
-            <div class="list-group" id="keylist">
-              <!-- FIXME: Remove this -->
+      <div v-if="signedIn">
+
+        <div class="container">
+
+          <div class="row justify-content-md-center">
+            <div class="col-xs-10 col-md-4 center initLoader" v-if="loading">
+              <i class="fa fa-refresh fa-spin fa-5x"></i><br>
+            </div>
+            <div class="w-100"></div>
+            <div class="col-xs-12 col-sm-8 col-md-6 col-lg-6">
+              <div class="list-group" id="keylist">
+
+                <a
+                  class="list-group-item d-flex justify-content-between align-items-center otp-item"
+                  v-for="item in filteredItems"
+                  :key="item.name"
+                  v-clipboard:copy="item.code"
+                  v-clipboard:success="() => codeCopyResult(true)"
+                  v-clipboard:error="() => codeCopyResult(false)"
+                >
+                  <span>
+                    <i :class="`fa fa-fw fa-${item.icon}`"></i>
+                    <span class="title">{{ item.name }}</span>
+                  </span>
+                  <span class="badge">{{ formatCode(item.code) }}</span>
+                </a>
+
+              </div>
             </div>
           </div>
         </div>
+
       </div>
+
+      <div v-else>
+
+        <div class="container">
+          <div class="row">
+            <div class="col-xs-12 col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3 col-lg-6 col-lg-offset-3">
+
+              <div class="panel panel-default">
+                <div class="panel-heading">Please sign in!</div>
+                <div class="panel-body">
+                  <p>
+                    Use Github authentication to sign into your Vault instance and get access to your one-time passwords:
+                  </p>
+                  <p class="center">
+                    <a :href="authurl" class="btn btn-primary"><i class="fa fa-github" aria-hidden="true"></i> Sign-in with Github</a>
+                  </p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div> <!-- /#login -->
 
     </div> <!-- /#application -->
 
-    <div id="login">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.min.js"
+            integrity="sha256-chlNFSVx3TdcQ2Xlw7SvnbLAavAQLO0Y/LBiWX04viY="
+            crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-vue@2.0.0/dist/bootstrap-vue.min.js"
+            integrity="sha256-Hv63vpX6fRHvM0UYK/NJMbAZ81/6IHQfkkq5BSHYXP8="
+            crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue-clipboard2@0.3.1/dist/vue-clipboard.min.js"
+            integrity="sha256-XvHL1mhvDUwfYL9UgYaEG0TBKZg3J9uScjUDG6oCS6k="
+            crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@0.19.0/dist/axios.min.js"
+            integrity="sha256-S1J4GVHHDMiirir9qsXWc8ZWw74PHHafpsHp5PXtjTs="
+            crossorigin="anonymous"></script>
 
-      <div class="container">
-        <div class="row">
-          <div class="col-xs-12 col-sm-8 col-sm-offset-2 col-md-6 col-md-offset-3 col-lg-6 col-lg-offset-3">
-
-            <div class="panel panel-default">
-              <div class="panel-heading">Please sign in!</div>
-              <div class="panel-body">
-                <p>
-                  Use Github authentication to sign into your Vault instance and get access to your one-time passwords:
-                </p>
-                <p class="center">
-                  <a href="{{ .authurl }}" class="btn btn-primary"><i class="fa fa-github" aria-hidden="true"></i> Sign-in with Github</a>
-                </p>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </div>
-
-    </div> <!-- /#login -->
-
-    <div id="templates">
-      <div id="tpl-otp-item">
-        <a class="list-group-item d-flex justify-content-between align-items-center otp-item">
-          <span>
-            <i class="fa fa-fw"></i>
-            <span class="title">Some Site</span>
-          </span>
-          <span class="badge">145 369</span>
-        </a>
-      </div>
-      <div id="tpl-message">
-        <div class="row">
-          <div class="alert alert-dismissible col-sm-12 col-xs-12 col-md-12 col-lg-12" role="alert">
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-            <strong class="keyword">Warning!</strong> <span class="message"></span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"
-            integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
-    <!-- Include all compiled plugins (below), or include individual files as needed -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0/js/bootstrap.min.js"
-            integrity="sha256-5+02zu5UULQkO7w1GIr6vftCgMfFdZcAHeDtFnKZsBs=" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.7.1/clipboard.min.js"
-            integrity="sha256-Daf8GuI2eLKHJlOWLRR/zRy9Clqcj4TUSumbxYH9kGI=" crossorigin="anonymous"></script>
-    <!-- Application specific JavaScript -->
+    <script src="vars.js"></script>
     <script src="application.js"></script>
+
   </body>
 </html>
