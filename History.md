@@ -1,3 +1,9 @@
+# 0.6.0 / 2019-09-09
+
+  * Switch to go modules
+  * Rewrite frontend on ES6 with Vue rendering
+  * Remove template rendering, send vars through extra JS file
+
 # 0.5.0 / 2018-08-30
 
   * Update vendors, switch to dep
