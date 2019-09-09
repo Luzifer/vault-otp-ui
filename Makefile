@@ -10,8 +10,5 @@ build: generate
 install: generate
 	go install -ldflags "-X main.version=$(shell git describe --tags || git rev-parse --short HEAD || echo dev)"
 
-generate: build_js
+generate:
 	go generate
-
-build_js:
-	coffee -c application.coffee
