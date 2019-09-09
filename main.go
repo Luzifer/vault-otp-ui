@@ -16,9 +16,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Luzifer/rconfig"
 	log "github.com/Sirupsen/logrus"
-	"github.com/alecthomas/template"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
@@ -26,6 +24,8 @@ import (
 	"github.com/tdewolff/minify/html"
 	"github.com/tdewolff/minify/js"
 	validator "gopkg.in/validator.v2"
+
+	"github.com/Luzifer/rconfig"
 )
 
 const (
@@ -96,6 +96,7 @@ func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/oauth2", handleOAuthCallback)
 	r.HandleFunc("/application.js", handleApplicationJS)
+	r.HandleFunc("/vars.js", handleApplicationVars)
 	r.HandleFunc("/codes.json", handleCodesJSON)
 	r.PathPrefix("/static").HandlerFunc(handleStatics)
 	r.HandleFunc("/", handleIndexPage)
@@ -118,32 +119,13 @@ func getFileContentFallback(filename string) (io.Reader, error) {
 }
 
 func handleIndexPage(res http.ResponseWriter, r *http.Request) {
-	sess, _ := cookieStore.Get(r, sessionName)
-	_, hasAccessToken := sess.Values["access_token"]
-
 	content, err := getFileContentFallback("index.html")
 
 	if err != nil {
 		http.Error(res, "No suitable index page found", http.StatusInternalServerError)
 	}
 
-	buf := new(bytes.Buffer)
-	io.Copy(buf, content)
-
-	tpl, err := template.New("index").Parse(buf.String())
-	if err != nil {
-		log.Errorf("Parsing index template failed: %s", err)
-		http.Error(res, "No suitable index page found", http.StatusInternalServerError)
-		return
-	}
-
-	outbuf := new(bytes.Buffer)
-	tpl.Execute(outbuf, map[string]interface{}{
-		"isloggedin": hasAccessToken,
-		"authurl":    getAuthenticationURL(),
-	})
-
-	mini.Minify("text/html", res, outbuf)
+	mini.Minify("text/html", res, content)
 }
 
 func handleApplicationJS(res http.ResponseWriter, r *http.Request) {
@@ -154,6 +136,18 @@ func handleApplicationJS(res http.ResponseWriter, r *http.Request) {
 	}
 
 	mini.Minify("application/javascript", res, content)
+}
+
+func handleApplicationVars(w http.ResponseWriter, r *http.Request) {
+	sess, _ := cookieStore.Get(r, sessionName)
+	_, hasAccessToken := sess.Values["access_token"]
+
+	var buf = new(bytes.Buffer)
+
+	fmt.Fprintf(buf, "const signedIn = %v\n", hasAccessToken)
+	fmt.Fprintf(buf, "const authUrl = %q\n", getAuthenticationURL())
+
+	mini.Minify("application/javascript", w, buf)
 }
 
 func handleOAuthCallback(res http.ResponseWriter, r *http.Request) {
@@ -241,7 +235,7 @@ func handleCodesJSON(res http.ResponseWriter, r *http.Request) {
 
 func handleStatics(res http.ResponseWriter, r *http.Request) {
 	req := strings.TrimLeft(r.URL.Path, "/")
-	ext := req[strings.LastIndex(req, "."):len(req)]
+	ext := req[strings.LastIndex(req, "."):]
 	t := mime.TypeByExtension(ext)
 
 	b, err := Asset(req)
