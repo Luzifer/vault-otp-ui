@@ -201,12 +201,9 @@ func handleCodesJSON(res http.ResponseWriter, r *http.Request) {
 	}
 	log.WithFields(log.Fields{"token": hashSecret(tok)}).Debugf("Checked / renewed token")
 
-	pointOfTime := time.Now()
-	if r.URL.Query().Get("it") == "next" {
-		pointOfTime = pointOfTime.Add(time.Duration(30-(pointOfTime.Second()%30)) * time.Second)
-	}
+	nextTokens := r.URL.Query().Get("it") == "next"
 
-	tokens, err := getSecretsFromVault(tok, pointOfTime)
+	tokens, err := getSecretsFromVault(tok, nextTokens)
 	if err != nil {
 		log.Errorf("Unable to fetch codes: %s", err)
 		http.Error(res, `{"error":"Unexpected error while fetching tokens"}`, http.StatusInternalServerError)
@@ -220,12 +217,21 @@ func handleCodesJSON(res http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var (
+		minPeriod   = tokenList(tokens).MinPeriod()
+		pointOfTime = time.Now()
+	)
+
+	if nextTokens {
+		pointOfTime = pointOfTime.Add(time.Duration(minPeriod) * time.Second)
+	}
+
 	result := struct {
 		Tokens   []*token  `json:"tokens"`
 		NextWrap time.Time `json:"next_wrap"`
 	}{
 		Tokens:   tokens,
-		NextWrap: pointOfTime.Add(time.Duration(30-(pointOfTime.Second()%30)) * time.Second),
+		NextWrap: pointOfTime.Add(time.Duration(minPeriod-(pointOfTime.Second()%minPeriod)) * time.Second),
 	}
 
 	res.Header().Set("Content-Type", "application/json")
