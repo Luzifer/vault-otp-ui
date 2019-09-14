@@ -19,6 +19,22 @@ const app = new Vue({
 
       return items
     },
+
+    minPeriod() {
+      let min = 99999
+
+      for (let i of this.otpItems) {
+        if (i.period > 0 && i.period < min) {
+          min = i.period
+        }
+      }
+
+      if (min === 99999) {
+        min = 30
+      }
+
+      return min
+    },
   },
 
   data: {
@@ -116,7 +132,7 @@ const app = new Vue({
     // Update timer bar and trigger re-fetch of codes by time remaining
     refreshTimerProgress() {
       const secondsLeft = this.timeLeft()
-      this.timeLeftPerc = secondsLeft / 30 * 100
+      this.timeLeftPerc = secondsLeft / this.minPeriod * 100
 
       if (secondsLeft < 3 && !this.preFetch && this.signedIn) {
         // Do a pre-fetch to provide a seamless experience
