@@ -22,6 +22,7 @@ type token struct {
 	Name   string `json:"name"`
 	Secret string `json:"-"`
 	Digits string `json:"digits"`
+	Period string `json:"period"`
 }
 
 func (t *token) GenerateCode(in time.Time) error {
@@ -44,6 +45,14 @@ func (t *token) GenerateCode(in time.Time) error {
 			return errors.Wrap(err, "Unable to parse digits to int")
 		}
 		opts.Digits = otp.Digits(d)
+	}
+
+	if t.Period != "" {
+		p, err := strconv.Atoi(t.Period)
+		if err != nil {
+			return errors.Wrap(err, "Unable to parse period to int")
+		}
+		opts.Period = uint(p)
 	}
 
 	var err error
@@ -212,6 +221,8 @@ func fetchTokenFromKey(client *api.Client, k string, respChan chan *token, wg *s
 			tok.Icon = v.(string)
 		case "digits":
 			tok.Digits = v.(string)
+		case "period":
+			tok.Period = v.(string)
 		}
 	}
 
