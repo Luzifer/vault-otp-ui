@@ -215,7 +215,10 @@ func fetchTokenFromKey(client *api.Client, k string, respChan chan *token, wg *s
 		}
 	}
 
-	tok.GenerateCode(pointOfTime)
+	if err = tok.GenerateCode(pointOfTime); err != nil {
+		log.WithError(err).WithField("name", tok.Name).Error("Unable to generate code")
+		return
+	}
 
 	if tok.Code == "" {
 		// Nothing ended in us having a code, does not seem to be something for us
