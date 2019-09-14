@@ -79,9 +79,14 @@ func (t tokenList) MinPeriod() int {
 	var m int = math.MaxInt32
 
 	for _, tok := range t {
-		if tok.Period < m {
+		if tok.Period != 0 && tok.Period < m {
 			m = tok.Period
 		}
+	}
+
+	if m == math.MaxInt32 {
+		// Fallback: Everything uses the default value
+		m = 30
 	}
 
 	return m
