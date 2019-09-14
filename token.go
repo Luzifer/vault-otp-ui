@@ -103,22 +103,23 @@ func useOrRenewToken(tok, accessToken string) (string, error) {
 
 	if tok != "" {
 		client.SetToken(tok)
-		if s, err := client.Auth().Token().LookupSelf(); err == nil && s.Data != nil {
+		s, err := client.Auth().Token().LookupSelf()
+		if err == nil && s.Data != nil {
 			log.WithFields(log.Fields{"token": hashSecret(tok)}).Debugf("Token is valid for another %vs", s.Data["ttl"])
 			return tok, nil
-		} else {
-			log.WithFields(log.Fields{"token": hashSecret(tok)}).Debugf("Token did not met requirements: err = %s", err)
-			if s != nil {
-				log.WithFields(log.Fields{"token": hashSecret(tok)}).Debugf("Token did not met requirements: data = %v", s.Data)
-			}
+		}
+
+		log.WithFields(log.Fields{"token": hashSecret(tok)}).Debugf("Token did not met requirements: err = %s", err)
+		if s != nil {
+			log.WithFields(log.Fields{"token": hashSecret(tok)}).Debugf("Token did not met requirements: data = %v", s.Data)
 		}
 	}
 
-	if s, err := client.Logical().Write("auth/github/login", map[string]interface{}{"token": accessToken}); err != nil || s.Auth == nil {
+	s, err := client.Logical().Write("auth/github/login", map[string]interface{}{"token": accessToken})
+	if err != nil || s.Auth == nil {
 		return "", fmt.Errorf("Login did not work: Error = %s", err)
-	} else {
-		return s.Auth.ClientToken, nil
 	}
+	return s.Auth.ClientToken, nil
 }
 
 func getSecretsFromVault(tok string, next bool) ([]*token, error) {
