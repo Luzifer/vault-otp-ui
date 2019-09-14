@@ -1,3 +1,10 @@
+# 0.7.0 / 2019-09-14
+
+  * Allow overriding period
+  * Log errors in code generation
+  * Allow other digit counts than 6 or 8
+  * Fix: Use right variable for authUrl
+
 # 0.6.0 / 2019-09-09
 
   * Switch to go modules
