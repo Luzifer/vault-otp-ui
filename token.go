@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"path"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/hashicorp/vault/api"
+	"github.com/pkg/errors"
 	"github.com/pquerna/otp"
 	"github.com/pquerna/otp/totp"
 	log "github.com/sirupsen/logrus"
@@ -36,8 +38,12 @@ func (t *token) GenerateCode(in time.Time) error {
 		Algorithm: otp.AlgorithmSHA1,
 	}
 
-	if t.Digits == "8" {
-		opts.Digits = otp.DigitsEight
+	if t.Digits != "" {
+		d, err := strconv.Atoi(t.Digits)
+		if err != nil {
+			return errors.Wrap(err, "Unable to parse digits to int")
+		}
+		opts.Digits = otp.Digits(d)
 	}
 
 	var err error
