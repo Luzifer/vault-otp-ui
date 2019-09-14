@@ -126,7 +126,10 @@ const app = new Vue({
 
     // Format code for better readability: 000 000 or 00 000 000
     formatCode(code) {
-      return code.replace(/^([0-9]{3})([0-9]{3})$/, '$1 $2').replace(/^([0-9]{2})([0-9]{3})([0-9]{3})$/, '$1 $2 $3')
+      return code
+        .replace(/^([0-9]{3})([0-9]{3})$/, '$1 $2') // 6 digits
+        .replace(/^([0-9]{2})([0-9]{3})([0-9]{2})$/, '$1 $2 $3') // 7 digits
+        .replace(/^([0-9]{2})([0-9]{3})([0-9]{3})$/, '$1 $2 $3') // 8 digits
     },
 
     // Update timer bar and trigger re-fetch of codes by time remaining
