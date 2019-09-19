@@ -43,11 +43,13 @@ const app = new Vue({
     currentTimeout: null,
     fetchInProgress: false,
     filter: '',
+    inactivityTimeout: null,
     lastFetch: null,
     loading: true,
     preFetch: null,
     signedIn,
     otpItems: [],
+    refreshTimerProgressTicker: null,
     timeLeftPerc: 0.0,
   },
 
@@ -168,12 +170,37 @@ const app = new Vue({
       this.preFetch = data
     },
 
+    windowBlur(evt) {
+      // Prepare shutdown of background refresh as long as page has no focus
+      this.inactivityTimeout = window.setTimeout(() => {
+        window.clearInterval(this.refreshTimerProgressTicker)
+        this.refreshTimerProgressTicker = null
+        this.inactivityTimeout = null
+      }, 30000)
+    },
+
+    windowFocus(evt) {
+      if (this.inactivityTimeout) {
+        // Page is in focus again, do not suspend
+        window.clearTimeout(this.inactivityTimeout)
+        this.inactivityTimeout = null
+      }
+
+      if (!this.refreshTimerProgressTicker) {
+        // In case the refresh ticker was stopped, revive it
+        this.refreshTimerProgressTicker = window.setInterval(this.refreshTimerProgress, 500)
+      }
+    },
+
   },
 
   // Initialize application
   mounted() {
-    window.setInterval(this.refreshTimerProgress, 500)
+    this.refreshTimerProgressTicker = window.setInterval(this.refreshTimerProgress, 500)
     this.fetchCodes(iterationCurrent)
+
+    window.addEventListener('blur', (evt) => this.windowBlur(evt))
+    window.addEventListener('focus', (evt) => this.windowFocus(evt))
   },
 
 })
